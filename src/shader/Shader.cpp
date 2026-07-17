@@ -78,3 +78,40 @@ void Shader::Use() const {
 GLuint Shader::GetID() const {
     return m_Program;
 }
+
+GLint Shader::GetUniformLocation(const std::string &name) {
+    auto it = m_UniformCache.find(name);
+
+    if (it != m_UniformCache.end()) {
+        return it->second;
+    }
+
+    GLint location = glGetUniformLocation(m_Program, name.c_str());
+    m_UniformCache[name] = location;
+
+    return location;
+}
+
+void Shader::SetBool(const std::string &name, bool value) {
+    GLint location = GetUniformLocation(name);
+
+    if (location != -1) {
+        glUniform1i(location, static_cast<int>(value));
+    }
+}
+
+void Shader::SetInt(const std::string &name, int value) {
+    GLint location = GetUniformLocation(name);
+
+    if (location != -1) {
+        glUniform1i(location, value);
+    }
+}
+
+void Shader::SetFloat(const std::string &name, float value) {
+    GLint location = GetUniformLocation(name);
+
+    if (location != -1) {
+        glUniform1f(location, value);
+    }
+}

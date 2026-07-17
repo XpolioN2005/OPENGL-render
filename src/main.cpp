@@ -45,6 +45,9 @@ int main() {
         return -1;
     }
 
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     Shader shader("assets/shaders/basic.glsl");
 
     float vertices[] = {
@@ -93,6 +96,11 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);
 
         shader.Use();
+
+        float timeValue = static_cast<float>(glfwGetTime());
+        float alphaValue = sin(timeValue) * 0.5f + 0.5f;
+
+        shader.SetFloat("alpha", alphaValue);
 
         glBindVertexArray(VAO);
 
