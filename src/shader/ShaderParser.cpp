@@ -12,7 +12,6 @@ std::string ShaderParser::ReadFile(const std::string &filepath) {
     }
 
     std::stringstream buffer;
-
     buffer << file.rdbuf();
 
     return buffer.str();
@@ -22,7 +21,6 @@ ShaderParser::StageMap ShaderParser::Parse(const std::string &filepath) {
     StageMap stages;
 
     std::string source = ReadFile(filepath);
-
     std::istringstream stream(source);
 
     std::string globalSource;
@@ -39,7 +37,7 @@ ShaderParser::StageMap ShaderParser::Parse(const std::string &filepath) {
         if (line == "#[end]") {
 
             if (currentStage == ShaderStage::None) {
-                throw std::runtime_error("Unexpected #[end] directive.");
+                throw std::runtime_error("Unexpected #[end]: no shader stage is currently open.");
             }
 
             currentStage = ShaderStage::None;
@@ -51,7 +49,12 @@ ShaderParser::StageMap ShaderParser::Parse(const std::string &filepath) {
         if (stage != ShaderStage::None) {
 
             if (currentStage != ShaderStage::None) {
-                throw std::runtime_error("Cannot start a new shader stage before ending the current one.");
+                throw std::runtime_error(
+                    "Invalid shader format: close the current stage with #[end] before starting another stage.");
+            }
+
+            if (stages.find(stage) != stages.end()) {
+                throw std::runtime_error("Duplicate shader stage: each stage can only be declared once.");
             }
 
             currentStage = stage;
@@ -59,7 +62,11 @@ ShaderParser::StageMap ShaderParser::Parse(const std::string &filepath) {
             continue;
         }
 
-        // Normal GLSL code.
+        if (line.rfind("#[", 0) == 0) {
+            throw std::runtime_error("Unknown shader directive: " + line +
+                                     ". Allowed: #[vertex], #[fragment], #[geometry], #[compute], #[end].");
+        }
+
         if (currentStage == ShaderStage::None) {
             globalSource += line + '\n';
         } else {
@@ -68,27 +75,31 @@ ShaderParser::StageMap ShaderParser::Parse(const std::string &filepath) {
     }
 
     if (currentStage != ShaderStage::None) {
-        throw std::runtime_error("Shader stage was not terminated with #[end].");
+        throw std::runtime_error("Unclosed shader stage: missing #[end] directive.");
     }
 
     if (stages.find(ShaderStage::Vertex) == stages.end()) {
-        throw std::runtime_error("Vertex shader stage is missing.");
+        throw std::runtime_error("Missing #[vertex] stage: vertex shader is required.");
     }
 
     if (stages.find(ShaderStage::Fragment) == stages.end()) {
-        throw std::runtime_error("Fragment shader stage is missing.");
+        throw std::runtime_error("Missing #[fragment] stage: fragment shader is required.");
     }
 
     return stages;
 }
 
 ShaderStage ShaderParser::ParseDirective(const std::string &line) {
+
     if (line == "#[vertex]")
         return ShaderStage::Vertex;
+
     if (line == "#[fragment]")
         return ShaderStage::Fragment;
+
     if (line == "#[geometry]")
         return ShaderStage::Geometry;
+
     if (line == "#[compute]")
         return ShaderStage::Compute;
 
