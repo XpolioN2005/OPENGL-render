@@ -1,0 +1,14 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Debug OpenGL",
+			"type": "cppvsdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/build/Debug/OpenGL.exe",
+			"cwd": "${workspaceFolder}",
+			"stopAtEntry": false,
+			"console": "integratedTerminal"
+		}
+	]
+}
