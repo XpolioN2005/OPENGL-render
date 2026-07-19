@@ -4,6 +4,10 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include <iostream>
 
 #include "shader/Shader.h"
@@ -97,6 +101,7 @@ int main() {
 
     int width, height, nrChannels;
 
+    stbi_set_flip_vertically_on_load(true);
     unsigned char *data = stbi_load("assets/textures/wall.jpg", &width, &height, &nrChannels, 0);
 
     if (data) {
@@ -123,7 +128,12 @@ int main() {
 
         glBindTexture(GL_TEXTURE_2D, texture);
 
+        glm::mat4 transform = glm::mat4(1.0f); // initialize to identity matrix first
+        // transform = glm::translate(transform, glm::vec3(0.5f, 0.5f, 0.0f));
+        transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+
         shader.Use();
+        shader.SetMat4("transform", transform);
 
         glBindVertexArray(VAO);
 
